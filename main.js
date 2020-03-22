@@ -1,3 +1,5 @@
+const DISTANCE_THRESHOLD = 50;
+
 class Canvas {
 	constructor(elementId) {
 		const canvas = document.getElementById(elementId);
@@ -19,12 +21,20 @@ class Canvas {
 		this.ctx.fill();
 	}
 
-	drawLine(point, other) {
+	drawLine(point, other, distance) {
 		this.ctx.beginPath();
-		this.ctx.strokeStyle = "#0088ff";
+		this.ctx.strokeStyle = this.temperature(distance);
 		this.ctx.moveTo(point.x, point.y);
 		this.ctx.lineTo(other.x, other.y);
 		this.ctx.stroke();
+	}
+
+	temperature(distance) {
+		// 0 to 75 pixels is red to blue. 255-0-0 to 0-204-255.
+		const red = Math.floor(255 * (1 - distance / DISTANCE_THRESHOLD));
+		const green = Math.floor(204 * distance / DISTANCE_THRESHOLD);
+		const blue = Math.floor(255 * distance / DISTANCE_THRESHOLD);
+		return "rgb(" + red + "," + green + "," + blue + ")";
 	}
 }
 
@@ -46,15 +56,12 @@ class Point {
 		this.y = (this.y + this.SPEED * Math.sin(this.theta) + window.innerHeight) % window.innerHeight;
 	}
 
-	draw() {
-	}
-
 	distanceTo(other) {
 		return Math.sqrt(Math.pow(this.x - other.x, 2) + Math.pow(this.y - other.y, 2));
 	}
 }
 
-const NUM_POINTS = 100;
+const NUM_POINTS = 200;
 let status = "alive";
 
 const canvas = new Canvas("canvas");
@@ -71,8 +78,9 @@ function animate() {
 		canvas.drawPoint(point);
 
 		for (let other of points) {
-			if (point.distanceTo(other) < 75) {
-				canvas.drawLine(point, other);
+			const distance = point.distanceTo(other);
+			if (distance < DISTANCE_THRESHOLD) {
+				canvas.drawLine(point, other, distance);
 			}
 		}
 	}
